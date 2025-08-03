@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Court Case Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h2 { color: #333; }
+        form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            width: 400px;
+        }
+        label { display: block; margin-top: 10px; }
+        input[type=text], select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Court Case Tracker</h2>
+
+    <form method="post" action="/search">
+        <label>Case Type:</label>
+        <select name="case_type" id="case_type" required>
+            <option value="">Select</option>
+            {% for ct in case_type %}
+                <option value="{{ ct }}" 
+                    {% if form_data and form_data['case_type'] == ct %}selected{% endif %}>
+                    {{ ct }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Case Number:</label>
+        <input type="text" name="case_number" value="{{ form_data.case_number if form_data else '' }}" required>
+
+        <label>Filing Year:</label>
+        <input type="text" name="filing_year" value="{{ form_data.filing_year if form_data else '' }}" required>
+
+        <button type="submit">Search</button>
+    </form>
+
+  {% if case_data %}
+    {% if case_data|length > 0 %}
+        <h3>Results:</h3>
+        <table border="1" cellpadding="5">
+            <tr>
+                <th>S.No</th>
+                <th>Case Details</th>
+                <th>Petitioner Vs Respondent</th>
+                <th>Listing Date / Court</th>
+                <th>Order Link</th>
+            </tr>
+
+            {% for row in case_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row.case_info }}</td>
+                <td>
+                    {# Join the parties list with spaces #}
+                    {{ row.parties | join(' ') }}
+                </td>
+                <td>
+                    {# Join listing dates with line breaks #}
+                    {% for item in row.listing_date_court %}
+                        {{ item }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{{ row.latest_order_url }}" target="_blank">Latest Order</a>
+                    <br><br>
+                    {# Show all PDFs as links #}
+                    {% for pdf in row.pdfs %}
+                        <a href="{{ pdf }}" target="_blank">PDF {{ loop.index }}</a><br>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p class="error">No data found for this case.</p>
+    {% endif %}
+    {% elif error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+</body>
+</html>
